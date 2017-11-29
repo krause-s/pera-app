@@ -6,13 +6,17 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Monitor;
 import org.eclipse.swt.widgets.Shell;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.uni_koeln.dh.pera.gui.misc.LayoutHelper;
 import de.uni_koeln.dh.pera.util.Calc;
 
 // main (ui) thread
 public class View {
-			
+	
+		private Logger logger = LoggerFactory.getLogger(getClass());
+	
 		// TODO if fitting set to final
 		private static int H_HMONITOR_PCT = 80, 			// "height: 80% of the height of the monitor"
 				W_HEIGHT_PCT = /*75*/80;					// "width: 80% of the height (of the app)"
@@ -24,7 +28,7 @@ public class View {
 		
 		private String title = null;
 		private boolean initialized = false;
-	
+		
 	public View(String title) {
 		this.display = new Display();
 		this.title = title;		
@@ -34,6 +38,8 @@ public class View {
 	}
 	
 	public void init() {		
+		logger.info("Initialize shell ('" + title + "')...");
+		
 		shell = new Shell(display, getStyle());
 		shell.setSize(getSizeByHeight(H_HMONITOR_PCT));		
 		shell.setLocation(getCenter());		
@@ -45,14 +51,15 @@ public class View {
 	}
 	
 	public void loadComponents() {
-		ClientArea cArea = new ClientArea(shell);
-		cArea.init();
+		ClientWrapper wrapper = new ClientWrapper(shell);
+		wrapper.init();
 	}
 	
 	public void show() {
+		logger.info("Open shell");
 		shell.open();
 		
-		// TODO if needed add processing thread here
+		// if needed add processing thread here
 		
 		while (!shell.isDisposed()) {
 			if (!display.readAndDispatch()) 
@@ -68,7 +75,7 @@ public class View {
 	// style
 	private int getStyle() {
 		// default: SHELL_TRIM = CLOSE | TITLE | MIN | MAX | RESIZE
-		// TODO deactivate MAX
+		// TODO disable macOS-fullscreen?
 		return SWT.CLOSE | SWT.TITLE | SWT.MIN;
 	}
 	
@@ -76,11 +83,13 @@ public class View {
 	private Point getSizeByHeight(int percentage) {
 		final int monitorHeight = monitorBounds.height;
 		
-		// TODO height: maybe user choice via GUI
-		float height = Calc.getValByPct(monitorHeight, percentage),		
-				width = 	Calc.getValByPct(height, W_HEIGHT_PCT);
-			
-		return new Point((int)width, (int)height);
+		// TODO height: user choice via GUI?
+		float heightF = Calc.getValByPct(monitorHeight, percentage);	
+		int width = (int) Calc.getValByPct(heightF, W_HEIGHT_PCT),
+				height = (int)heightF;
+		
+		logger.info("Size (x / y): " + width + " / " + height);
+		return new Point(width, height);
 	}
 	
 	// location
@@ -91,12 +100,13 @@ public class View {
 		int x = (monitorBounds.width - bounds.width) / 2, 
 				y = (monitorBounds.height - bounds.height) / 2;
 		
+		logger.info("Location (x / y): " + x + " / " + y);
 		return new Point(x, y);
 	}	
 
 	public boolean isInitialized() {
 		if (!initialized)
-			System.err.println("No view initialized.");
+			logger.error("No shell initialized.");
 		
 		return initialized;
 	}
