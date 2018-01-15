@@ -24,3 +24,6 @@ hs_err_pid*
 # custom
 /target/
 .DS_Store
+
+# tmp
+ne_50m_*

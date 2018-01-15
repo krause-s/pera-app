@@ -43,7 +43,7 @@ public class View {
 		shell = new Shell(display, getStyle());
 		shell.setSize(getSizeByHeight(H_HMONITOR_PCT));		
 		shell.setLocation(getCenter());		
-		shell.setLayout(LayoutHelper.getDefaultLayout());
+		shell.setLayout(LayoutHelper.getNormalizedLayout());
 //		shell.setBackground(display.getSystemColor(SWT.COLOR_RED));	
 		shell.setText(title);
 		

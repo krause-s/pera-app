@@ -4,8 +4,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.uni_koeln.dh.pera.gui.core.ImgComposite;
 import de.uni_koeln.dh.pera.gui.core.TxtComposite;
+import de.uni_koeln.dh.pera.gui.core.img.ImgComposite;
 import de.uni_koeln.dh.pera.util.Calc;
 
 public class ClientWrapper {

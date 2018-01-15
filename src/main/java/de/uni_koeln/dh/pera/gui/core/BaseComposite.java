@@ -1,4 +1,4 @@
-package de.uni_koeln.dh.pera.gui;
+package de.uni_koeln.dh.pera.gui.core;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 import de.uni_koeln.dh.pera.gui.misc.LayoutHelper;
 import de.uni_koeln.dh.pera.util.Calc;
 
-public class MainComposite extends Composite {
+public class BaseComposite extends Composite {
 
 		private Logger logger = LoggerFactory.getLogger(getClass());
 	
@@ -24,17 +24,17 @@ public class MainComposite extends Composite {
 				innerWidth = 0;
 		private boolean initialized = false;
 	
-	protected MainComposite(Composite parent) {
+	protected BaseComposite(Composite parent) {
 		super(parent, SWT.NONE);
 		parentWidth = parent.getBounds().width;
 		
 		this.display = getDisplay();
 	}
 
-	protected void init(int height, int verticalSpacing) {
+	protected void init(int height) {
 		this.height = height;
 		
-		setLayout(LayoutHelper.getLayout(verticalSpacing));		
+		setLayout(LayoutHelper.getLayout(false));		
 		setLayoutData(LayoutHelper.getGridData(parentWidth, height));
 		setInnerWidth();
 	}
@@ -55,7 +55,8 @@ public class MainComposite extends Composite {
 		this.initialized = initialized;
 	}
 	
-	protected boolean isInitialized() {
+	// TODO error message
+	public boolean isInitialized() {
 		if (!initialized)
 			logger.error("No text composite initialized.");
 		

@@ -8,11 +8,10 @@ import org.eclipse.swt.widgets.Composite;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.uni_koeln.dh.pera.gui.MainComposite;
 import de.uni_koeln.dh.pera.gui.misc.LayoutHelper;
 import de.uni_koeln.dh.pera.util.Calc;
 
-public class TxtComposite extends MainComposite {
+public class TxtComposite extends BaseComposite {
 	
 		private Logger logger = LoggerFactory.getLogger(getClass());
 		
@@ -25,7 +24,7 @@ public class TxtComposite extends MainComposite {
 	
 	public void init(int height) {
 		logger.info("Initialize text composite...");
-		super.init(height, 0);		
+		super.init(height);		
 				
 		setBackground(display.getSystemColor(SWT.COLOR_DARK_BLUE));			// TODO background
 		setInitialized(true);

@@ -10,15 +10,18 @@ public class LayoutHelper {
 		
 		private static Logger logger = LoggerFactory.getLogger(LayoutHelper.class);
 	
-	public static GridLayout getDefaultLayout() {
-		return getLayout(0);
+	public static GridLayout getNormalizedLayout() {
+		return getLayout(true);
 	}
 	
-	public static GridLayout getLayout(int verticalSpacing) {
+	public static GridLayout getLayout(boolean reset) {
 		GridLayout layout = new GridLayout();	// == new GridLayout(1, true);
-		layout.marginHeight = 0;
-		layout.marginWidth = 0;
-		layout.verticalSpacing = verticalSpacing;
+		
+		if (reset) {
+			layout.marginHeight = 0;
+			layout.marginWidth = 0;
+			layout.verticalSpacing = 0;
+		}
 		
 		logger.info("GridLayout (marginHeight, marginWidth, verticalSpacing): "
 				+ layout.marginHeight + ", " + layout.marginWidth + ", " 
