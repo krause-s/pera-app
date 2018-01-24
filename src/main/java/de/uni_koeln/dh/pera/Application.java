@@ -6,7 +6,7 @@ import de.uni_koeln.dh.pera.gui.View;
 public class Application {
 	
 	public static void main(String[] args) {		
-		View view = new View("pera-app");	// TODO title
+		View view = new View("Peros abenteuerliche Reise nach Konstantinopel");
 		view.init();
 		
 		if (view.isInitialized()) {

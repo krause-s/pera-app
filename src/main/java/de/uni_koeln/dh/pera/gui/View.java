@@ -18,12 +18,11 @@ public class View {
 		private Logger logger = LoggerFactory.getLogger(getClass());
 	
 		// TODO if fitting set to final
-		private static int H_HMONITOR_PCT = 80, 			// "height: 80% of the height of the monitor"
+		private static int H_HMONITOR_PCT = 90, 			// "height: 80% of the height of the monitor"
 				W_HEIGHT_PCT = /*75*/80;					// "width: 80% of the height (of the app)"
 	
 		private Display display = null;
-		private Shell shell = null;
-		
+		private Shell shell = null;		
 		private Rectangle monitorBounds = null;
 		
 		private String title = null;
@@ -46,13 +45,13 @@ public class View {
 		shell.setLayout(LayoutHelper.getNormalizedLayout());
 //		shell.setBackground(display.getSystemColor(SWT.COLOR_RED));	
 		shell.setText(title);
-		
+
 		initialized = true;
 	}
 	
 	public void loadComponents() {
-		ClientWrapper wrapper = new ClientWrapper(shell);
-		wrapper.init();
+		ClientWrapper client = new ClientWrapper(shell);
+		client.wrap();
 	}
 	
 	public void show() {
@@ -83,7 +82,6 @@ public class View {
 	private Point getSizeByHeight(int percentage) {
 		final int monitorHeight = monitorBounds.height;
 		
-		// TODO height: user choice via GUI?
 		float heightF = Calc.getValByPct(monitorHeight, percentage);	
 		int width = (int) Calc.getValByPct(heightF, W_HEIGHT_PCT),
 				height = (int)heightF;

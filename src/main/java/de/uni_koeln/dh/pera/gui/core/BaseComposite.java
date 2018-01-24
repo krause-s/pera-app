@@ -7,21 +7,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.uni_koeln.dh.pera.gui.misc.LayoutHelper;
-import de.uni_koeln.dh.pera.util.Calc;
 
 public class BaseComposite extends Composite {
 
 		private Logger logger = LoggerFactory.getLogger(getClass());
-	
-		// TODO if fitting set to final
-		private static int W_WIDTH_PCT = 80;	
-	
+		
 		protected Display display = null;
 		
 		// parent == shell
-		private int parentWidth = 0,
-				height = 0,
-				innerWidth = 0;
+		protected int parentWidth = 0;
+		private int	height = 0;
+		
 		private boolean initialized = false;
 	
 	protected BaseComposite(Composite parent) {
@@ -34,31 +30,21 @@ public class BaseComposite extends Composite {
 	protected void init(int height) {
 		this.height = height;
 		
-		setLayout(LayoutHelper.getLayout(false));		
+		setLayout(LayoutHelper.getNormalizedLayout());		
 		setLayoutData(LayoutHelper.getGridData(parentWidth, height));
-		setInnerWidth();
 	}
 	
-	protected int getHeight() {
+	public int getHeight() {
 		return height;
-	}
-	
-	private void setInnerWidth() {
-		innerWidth = (int) Calc.getValByPct(parentWidth, W_WIDTH_PCT);
-	}
-	
-	protected int getInnerWidth() {
-		return innerWidth;
 	}
 	
 	protected void setInitialized(boolean initialized) {
 		this.initialized = initialized;
 	}
 	
-	// TODO error message
 	public boolean isInitialized() {
 		if (!initialized)
-			logger.error("No text composite initialized.");
+			logger.error("Core composite not initialized.");
 		
 		return initialized;
 	}
