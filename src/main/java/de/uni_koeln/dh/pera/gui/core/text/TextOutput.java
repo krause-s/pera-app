@@ -13,7 +13,7 @@ public class TextOutput extends StyledText {
 		private Logger logger = LoggerFactory.getLogger(getClass());
 	
 		// TODO if fitting set to final
-		private static int H_HTXTOUT_PCT = 80;
+		private static int H_HTXTCOMP_PCT = 80;
 		
 		private TextComposite parent = null;
 		private int margin = 0;
@@ -29,37 +29,37 @@ public class TextOutput extends StyledText {
 		setMargin();
 		setLayoutData();
 
-		setColors();		
+		setColor();		
 		configText(true);
 	}
 	
-	private void setColors() {
-		setBackground(parent.getBackground()/*Display.getCurrent().getSystemColor(SWT.COLOR_MAGENTA)*/);
+	private void setColor() {
+//		setBackground(Display.getCurrent().getSystemColor(SWT.COLOR_MAGENTA));
 		setForeground(parent.getForeground());
 	}
 	
 	private void configText(boolean justify) {
 		setEditable(false);
 		setJustify(justify);		
-		setFont(parent.getFont(/*SWT.ITALIC*/SWT.NORMAL));	// TODO font style
+		setFont(parent.getFont(/*SWT.ITALIC*/SWT.NORMAL));
 		setText(getDefaultText());
 	}
 	
 	private void setMargin() {
-		margin = parent.getTextMargin();
+		margin = parent.getLeftRightMargin();
 		LayoutHelper.setMargin(this, margin);
 	}
 		
 	private void setLayoutData() {
 		int outputWidth = parent.getWidth() - (2*margin),
-				outputHeight = (int) Calc.getValByPct(parent.getHeight(), H_HTXTOUT_PCT);
+				outputHeight = (int) Calc.getValByPct(parent.getHeight(), H_HTXTCOMP_PCT);
 
 		setLayoutData(LayoutHelper.getGridData(
 				outputWidth, outputHeight, 
 				true, false));
 	}
 
-	// TODO default text
+	// TODO default text?
 	private String getDefaultText() {
 		return "Willkommen meine Damen und Herren. Es ist eine Freude, Sie bei meiner Reise willkommen zu heißen. "
 				+ "Mein Name ist Pero und ich bin stolzer Kastilier und enger Vertrauter unseres verehrten Königs "

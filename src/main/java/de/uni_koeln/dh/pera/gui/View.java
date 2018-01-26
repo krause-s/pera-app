@@ -43,6 +43,7 @@ public class View {
 		shell.setSize(getSizeByHeight(H_HMONITOR_PCT));		
 		shell.setLocation(getCenter());		
 		shell.setLayout(LayoutHelper.getNormalizedLayout());
+		shell.setBackgroundMode(SWT.INHERIT_FORCE);		// allows transparent backgrounds
 //		shell.setBackground(display.getSystemColor(SWT.COLOR_RED));	
 		shell.setText(title);
 
@@ -58,7 +59,7 @@ public class View {
 		logger.info("Open shell");
 		shell.open();
 		
-		// if needed add processing thread here
+		// if needed add processing (non-ui) thread here
 		
 		while (!shell.isDisposed()) {
 			if (!display.readAndDispatch()) 
