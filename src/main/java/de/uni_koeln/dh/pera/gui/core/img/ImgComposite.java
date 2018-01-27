@@ -10,6 +10,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Layout;
+import org.geotools.map.Layer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +24,8 @@ public class ImgComposite extends BaseComposite {
 		
 		private Map map = null;
 		
-		// TODO zoom out
+		// TODO zoom?
+		/*
 		private SelectionListener zoomOutSelection = new SelectionListener() {
 			public void widgetSelected(SelectionEvent e) {
 				System.out.println("zoomOut");
@@ -31,13 +33,13 @@ public class ImgComposite extends BaseComposite {
 			public void widgetDefaultSelected(SelectionEvent e) {}
 		};
 		
-		// TODO zoom in
 		private SelectionListener zoomInSelection = new SelectionListener() {
 			public void widgetSelected(SelectionEvent e) {
 				System.out.println("zoomIn");
 			}
 			public void widgetDefaultSelected(SelectionEvent e) {}
 		};
+		*/
 		
 		// TODO city layer
 		private SelectionListener citySelection = new SelectionListener() {
@@ -47,10 +49,23 @@ public class ImgComposite extends BaseComposite {
 			public void widgetDefaultSelected(SelectionEvent e) {}
 		};
 		
-		// TODO route layer
 		private SelectionListener routeSelection = new SelectionListener() {
-			public void widgetSelected(SelectionEvent e) {
-				System.out.println("route: " + ((Button)e.widget).getSelection());
+			public void widgetSelected(SelectionEvent e) {				
+				boolean selected = ((Button)e.widget).getSelection();
+//				System.out.println("route: " + selected);
+				
+				map.getRouteLayer().setVisible(selected);
+			}
+			public void widgetDefaultSelected(SelectionEvent e) {}
+		};
+		
+		private SelectionListener politSelection = new SelectionListener() {
+			public void widgetSelected(SelectionEvent e) {				
+				boolean selected = ((Button)e.widget).getSelection();
+//				System.out.println("polit.: " + selected);
+				
+				for (Layer layer : map.getPolitLayers()) 
+					layer.setVisible(selected);
 			}
 			public void widgetDefaultSelected(SelectionEvent e) {}
 		};
@@ -100,33 +115,58 @@ public class ImgComposite extends BaseComposite {
 		ctrlComp.setLayout(getCtrlLayout());
 		ctrlComp.setLayoutData(LayoutHelper.getCenteredData());
 //		ctrlComp.setBackground(display.getSystemColor(SWT.COLOR_MAGENTA));
-		
-		// TODO button images
-		
+				
+		/*
 		Button zoomOutButton = new Button(ctrlComp, SWT.PUSH);
 		zoomOutButton.setText("-");
+		zoomOutButton.setEnabled(false);
 		zoomOutButton.addSelectionListener(zoomOutSelection);
 		
 		Button zoomInButton = new Button(ctrlComp, SWT.PUSH);
 		zoomInButton.setText("+");
+		zoomInButton.setEnabled(false);
 		zoomInButton.addSelectionListener(zoomInSelection);
+		*/
 		
-		Button cityButton = new Button(ctrlComp, SWT.TOGGLE);
+		// TODO button images
+		
+		cityButton = new Button(ctrlComp, SWT.TOGGLE);
 		cityButton.setText("S");	
 		cityButton.addSelectionListener(citySelection);
 		
-		Button routeButton = new Button(ctrlComp, SWT.TOGGLE);
+		routeButton = new Button(ctrlComp, SWT.TOGGLE);
 		routeButton.setText("R");
+		routeButton.setSelection(true);
 		routeButton.addSelectionListener(routeSelection);
+		
+		politButton = new Button(ctrlComp, SWT.TOGGLE);			// TODO toggle style?
+		politButton.setText("P");
+		politButton.addSelectionListener(politSelection);
 	}
 
+		private Button cityButton, 
+			routeButton,
+			politButton;
+		
+//	protected boolean getCitySelection() {
+//		return cityButton.getSelection();
+//	}	
+//	
+//	protected boolean getRouteSelection() {
+//		return routeButton.getSelection();
+//	}
+//	
+//	protected boolean getPolitSelection() {
+//		return politButton.getSelection();
+//	}
+	
 	private Font getHeaderFont(int headHeight) {
 		Font font = getFont("Palatino Linotype", (headHeight / 3), SWT.BOLD);
 		return font;
 	}
 	
 	private Layout getCtrlLayout() {
-		RowLayout layout = LayoutHelper.getRowLayout(parentWidth / 10);
+		RowLayout layout = LayoutHelper.getRowLayout(parentWidth / 8);
 		return layout;
 	}
 	
