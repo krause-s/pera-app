@@ -50,7 +50,7 @@ public class Map extends Composite {
 	
 		// TODO if fitting set to final
 		protected static int H_HIMGCOMP_PCT = 75;
-		private static int W_WIMGCOMP_PCT = 80;
+		private static int W_WIMGCOMP_PCT = /*80*/77;
 	
 		private ImgComposite parent = null;
 		private GridLayout layout = null;
@@ -97,7 +97,7 @@ public class Map extends Composite {
 		
 		// GeoTIFF incl. meta
 //		File rasterFile = new File("src/main/resources/gis/raster/TextadventrueEmpty_geo.tif");
-		File rasterFile = new File("src/test/resources/pera/test.tif");
+		File rasterFile = new File("src/test/resources/pera/Textadventrue_neu.tif");
 		
 //									File shpFile = new File("src/test/resources/50m_cultural-edit/ne_50m_admin_0_sovereignty.shp");    		
 //									File shpFile = new File("src/main/resources/gis/shapes/political/AegyptischesMamelukenSultanat.shp");
@@ -133,17 +133,16 @@ public class Map extends Composite {
 									
 									routeLayer = setShapeLayer("Reiseroute", true);		// parent.getRouteSelection()	
 									mContent.addLayer(routeLayer);
-									chapterLayer = setShapeLayer("Kapitel_neu", false);		// TODO selection?
-									mContent.addLayer(chapterLayer);	
+//									chapterLayer = setShapeLayer("Kapitel_neu", false);		// TODO selection?
+//									mContent.addLayer(chapterLayer);	
 									cityLayer = setShapeLayer("Standorte_neu", false);	// parent.getCitySelection()
 									mContent.addLayer(cityLayer);
-																		
 									
 			//////////////////////////////			
 								
 			SwtMapPane mPane = new SwtMapPane(this, SWT.NO_BACKGROUND);
 			mPane.setBackground(parent.getDefaultBgColor());		// TODO pane standard color?
-			mPane.setRenderer(new StreamingRenderer());
+			mPane.setRenderer(new StreamingRenderer());			
 			mPane.setMapContent(mContent);
 			mPane.setLayoutData(getMapLayoutData());
 
@@ -183,19 +182,28 @@ public class Map extends Composite {
 		
 		layers.add(setShapeLayer(folderName.concat("AegyptischesMamelukenSultanat"), false));
 		layers.add(setShapeLayer(folderName.concat("Byzantinische Gebiete"), false));
-		layers.add(setShapeLayer(folderName.concat("Genuesische Gebiete"), false));
+		
 		layers.add(setShapeLayer(folderName.concat("Herzogtum Naxos"), false));
 		layers.add(setShapeLayer(folderName.concat("Johanniterorden"), false));
 		layers.add(setShapeLayer(folderName.concat("Kamariden Emirat"), false));
 		layers.add(setShapeLayer(folderName.concat("Königreich Zypern"), false));
 		layers.add(setShapeLayer(folderName.concat("OsmanischesReich"), false));
 		layers.add(setShapeLayer(folderName.concat("Venezianische Gebiete"), false));
-		
+		layers.add(setShapeLayer(folderName.concat("Genuesische Gebiete"), false));
 		return layers;
 	}
 	
-		private Color[] colors = new Color[] { Color.WHITE, Color.BLUE, Color.CYAN, Color.MAGENTA, Color.ORANGE,
-				Color.PINK, Color.YELLOW, Color.BLACK, Color.GRAY};
+		private Color[] colors = new Color[] { 
+					new Color(180,133,21), 
+					new Color(227,25,77), 
+					 
+					new Color(14,38,178), 
+					new Color(91,245,71),
+					new Color(31,120,180),
+					new Color(235,131,23), 
+					new Color(238,234,73), 
+					new Color(36,112,31),
+					new Color(195,54,176)};
 		private int idx = 0;
 	
 	private Layer setShapeLayer(String fileName, boolean visible) {
@@ -207,19 +215,24 @@ public class Map extends Composite {
 			
 			Style shpStyle = null;
 				
-			if (fileName.equals("Kapitel_neu"))
-				shpStyle = SLD.createPointStyle("Star", Color.BLACK, Color.YELLOW, 1.0f, 30.0f/*, null, null*/);
-			else 
+			/*if (fileName.equals("Kapitel_neu"))
+				shpStyle = SLD.createPointStyle("Star", Color.BLACK, Color.YELLOW, 1.0f, 30.0f);
+			else*/ 
 				if (fileName.equals("Reiseroute"))
-					shpStyle = SLD.createLineStyle(Color.RED, 3.0f);
+					shpStyle = SLD.createLineStyle(new Color(202,30,0), 1.5f); /* ok*/
 			else 
 				if (fileName.equals("Standorte_neu")) {
 					Font font = sf.getDefaultFont();
-					font.setSize(ff.literal(20));
+					font.setSize(ff.literal(15));
+					font.setStyle(ff.literal(Font.Style.ITALIC));
+					font.setWeight(ff.literal(Font.Weight.BOLD));
 					// TODO font color
-					shpStyle = SLD.createPointStyle("Circle", Color.BLACK, Color.GREEN, 1.0f, 10.0f, "Standort", font);
+					shpStyle = SLD.createPointStyle("Circle", Color.BLACK, new Color(202,30,0), 1.0f, 7.0f, "Standort", font);
 			} else {
-				shpStyle = SLD.createPolygonStyle(Color.BLACK, colors[idx], 1.0f);
+				// TODO transparent
+				shpStyle = SLD.createPolygonStyle(Color.BLACK, colors[idx], /*0.27f*/0.5f);
+				
+				
 				idx++;
 			}	
 			
