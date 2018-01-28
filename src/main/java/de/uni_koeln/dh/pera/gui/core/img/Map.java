@@ -5,14 +5,16 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TreeMap;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
-import org.geotools.coverage.GridSampleDimension;
-import org.geotools.coverage.grid.GridCoverage2D;
+import org.eclipse.swt.widgets.Shell;
 import org.geotools.coverage.grid.io.AbstractGridFormat;
 import org.geotools.coverage.grid.io.GridCoverage2DReader;
 import org.geotools.coverage.grid.io.GridFormatFinder;
@@ -45,40 +47,15 @@ import de.uni_koeln.dh.pera.gui.misc.LayoutHelper;
 import de.uni_koeln.dh.pera.util.Calc;
 
 public class Map extends Composite {
-	
-		private Logger logger = LoggerFactory.getLogger(getClass());
-	
-		// TODO if fitting set to final
-		protected static int H_HIMGCOMP_PCT = 75;
-		private static int W_WIMGCOMP_PCT = /*80*/77;
-	
-		private ImgComposite parent = null;
-		private GridLayout layout = null;
-		
-		private int width = 0,
-				height = 0;
-	
-	protected Map(ImgComposite parent) {
-		super(parent, SWT.NONE);
-		this.parent = parent;
-	}
-	
-	protected void init(int height) {
-		this.height = height;
-		
-		configComposite();
-		configMapPane();
-	}
 
-	private void configComposite() {
-		logger.info("Initialize map composite...");
-		
-		setLayout(getCompositeLayout());
-		setCompositeLayoutData();			
-		setBackground(parent.getDefaultBgColor());
-	}
+		// TODO check PCT
+		private final static int W_WIMGCOMP_PCT = /*80*/77;
+			
+		// TODO names
+		private Color lineColor = Color.BLACK,
+				fillColor = new Color(202,30,0);		// dark red
 	
-	// TODO GeoTools (GIS)
+	// TODO
 	private void configMapPane() {
 		logger.info("Add map pane...");
 		
@@ -110,7 +87,7 @@ public class Map extends Composite {
 			if (format instanceof GeoTiffFormat) 
 				hints = new Hints(Hints.FORCE_LONGITUDE_FIRST_AXIS_ORDER, Boolean.TRUE);
 			
-			/*GridCoverage2DReader*/ reader = format.getReader(rasterFile, hints);
+			GridCoverage2DReader reader = format.getReader(rasterFile, hints);
 
 			Style rasterStyle = createGreyscaleStyle(/*1*/);
 //			Style rasterStyle = createRGBStyle();
@@ -126,8 +103,8 @@ public class Map extends Composite {
 			Layer rasterLayer = new GridReaderLayer(reader, rasterStyle);
 			mContent.addLayer(rasterLayer);
 
-									politLayers = setShapeLayers("political/");
-									mContent.addLayers(politLayers);
+									territoryLayers = setShapeLayers("territories");
+									mContent.addLayers(territoryLayers);
 			
 //									Layer shpLayer = new FeatureLayer(shapefileSource, shpStyle);
 									
@@ -135,8 +112,8 @@ public class Map extends Composite {
 									mContent.addLayer(routeLayer);
 //									chapterLayer = setShapeLayer("Kapitel_neu", false);		// TODO selection?
 //									mContent.addLayer(chapterLayer);	
-									cityLayer = setShapeLayer("Standorte_neu", false);	// parent.getCitySelection()
-									mContent.addLayer(cityLayer);
+									placesLayer = setShapeLayer("Standorte_neu", false);	// parent.getCitySelection()
+									mContent.addLayer(placesLayer);
 									
 			//////////////////////////////			
 								
@@ -155,96 +132,112 @@ public class Map extends Composite {
 		}
 	}
 	
-		private Layer chapterLayer,
-			routeLayer,
-			cityLayer;	
-		
-		private List<Layer> politLayers;
-	
-	protected Layer getChapterLayer() {
-		return chapterLayer;
-	}	
-	
-	protected Layer getRouteLayer() {
-		return routeLayer;
-	}
-	
-	protected Layer getCityLayer() {
-		return cityLayer;
-	}
-	
-	protected List<Layer> getPolitLayers() {
-		return politLayers;
-	}
-	
-	private List<Layer> setShapeLayers(String folderName) {
-		List<Layer> layers = new ArrayList<Layer>();
-		
-		layers.add(setShapeLayer(folderName.concat("AegyptischesMamelukenSultanat"), false));
-		layers.add(setShapeLayer(folderName.concat("Byzantinische Gebiete"), false));
-		
-		layers.add(setShapeLayer(folderName.concat("Herzogtum Naxos"), false));
-		layers.add(setShapeLayer(folderName.concat("Johanniterorden"), false));
-		layers.add(setShapeLayer(folderName.concat("Kamariden Emirat"), false));
-		layers.add(setShapeLayer(folderName.concat("Königreich Zypern"), false));
-		layers.add(setShapeLayer(folderName.concat("OsmanischesReich"), false));
-		layers.add(setShapeLayer(folderName.concat("Venezianische Gebiete"), false));
-		layers.add(setShapeLayer(folderName.concat("Genuesische Gebiete"), false));
-		return layers;
-	}
-	
-		private Color[] colors = new Color[] { 
-					new Color(180,133,21), 
-					new Color(227,25,77), 
-					 
-					new Color(14,38,178), 
-					new Color(91,245,71),
-					new Color(31,120,180),
-					new Color(235,131,23), 
-					new Color(238,234,73), 
-					new Color(36,112,31),
-					new Color(195,54,176)};
-		private int idx = 0;
-	
-	private Layer setShapeLayer(String fileName, boolean visible) {
-		File shpFile = new File("src/main/resources/gis/shapes", fileName + ".shp");
+	// TODO connect visibility with ImgComposite.button
+	private Layer setShapeLayer(String subPath, boolean visible) {
+		Layer layer = null;
+		File file = new File("src/main/resources/gis/shapes", subPath + ".shp");		// TODO file reference (deployment)
 		
 		try {
-			FileDataStore dataStore = FileDataStoreFinder.getDataStore(shpFile);
-			SimpleFeatureSource shpFileSrc = dataStore.getFeatureSource();
+			FileDataStore dataStore = FileDataStoreFinder.getDataStore(file);
+			SimpleFeatureSource fileSrc = dataStore.getFeatureSource();
 			
-			Style shpStyle = null;
-				
-			/*if (fileName.equals("Kapitel_neu"))
-				shpStyle = SLD.createPointStyle("Star", Color.BLACK, Color.YELLOW, 1.0f, 30.0f);
-			else*/ 
-				if (fileName.equals("Reiseroute"))
-					shpStyle = SLD.createLineStyle(new Color(202,30,0), 1.5f); /* ok*/
-			else 
-				if (fileName.equals("Standorte_neu")) {
-					Font font = sf.getDefaultFont();
-					font.setSize(ff.literal(15));
-					font.setStyle(ff.literal(Font.Style.ITALIC));
-					font.setWeight(ff.literal(Font.Weight.BOLD));
-					// TODO font color
-					shpStyle = SLD.createPointStyle("Circle", Color.BLACK, new Color(202,30,0), 1.0f, 7.0f, "Standort", font);
-			} else {
-				// TODO transparent
-				shpStyle = SLD.createPolygonStyle(Color.BLACK, colors[idx], /*0.27f*/0.5f);
-				
-				
-				idx++;
-			}	
+			Style style = null;
 			
-			Layer layer = new FeatureLayer(shpFileSrc, shpStyle);
+			if (!subPath.contains(File.separator)) {
+				if (subPath.startsWith("Standorte")) {
+					style = SLD.createPointStyle(
+								"Circle", 
+								lineColor, fillColor, 
+								1.0f/*opacity*/, 
+								7.0f/*size*/, 					// TODO dynamize!
+								"Standort", setFont());
+				} else
+					if (subPath.startsWith("Reiseroute")) {
+						style = SLD.createLineStyle(
+									fillColor, 		
+									1.5f/*size*/);				// TODO dynamize?
+				}
+			} else {			// territories/
+				// TODO optimize workaround?
+				String namePrefix = file.getName().substring(0,8);
+				
+				for (String name : territoriesMap.keySet()) {
+					if (name.startsWith(namePrefix)) {
+						Integer[] c = territoriesMap.get(name);
+						style = SLD.createPolygonStyle(
+									lineColor, new Color(c[0],c[1],c[2]), 
+									0.5f/*opacity*/);
+						
+						break;
+					}
+				}
+			}
+			
+			layer = new FeatureLayer(fileSrc, style);
 			if (!visible) layer.setVisible(false);
-			
-			return layer;
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		
-		return null;
+		return layer;
+	}
+	
+	// TODO name, color
+	private Font setFont() {
+		Font font = sf.getDefaultFont();
+		font.setSize(ff.literal(15));		// TODO dynamize
+		font.setStyle(ff.literal(Font.Style.ITALIC));
+		font.setWeight(ff.literal(Font.Weight.BOLD));
+
+		return font;
+	}
+	
+	protected void init(int height) {
+		this.height = height;
+		
+		configComposite();
+		
+		// TODO kapseln
+		setTerritories();
+		configMapPane();
+		setLegend();
+	}
+	
+		
+
+	//////////////////////////////////////////////////////////////////////////////////////////	
+
+
+	
+		private Logger logger = LoggerFactory.getLogger(getClass());
+	
+		protected final static int H_HIMGCOMP_PCT = 75;
+	
+		private ImgComposite parent = null;
+		private Shell legendShell;		
+		
+		private GridLayout layout = null;
+		
+		private int width = 0,
+				height = 0;
+		
+		private java.util.Map<String, Integer[]> territoriesMap;
+		
+		private Layer placesLayer,
+			routeLayer;	
+		private List<Layer> territoryLayers;
+	
+	protected Map(ImgComposite parent) {
+		super(parent, SWT.NONE);
+		this.parent = parent;
+	}
+	
+	private void configComposite() {
+		logger.info("Initialize map composite...");
+		
+		setLayout(getCompositeLayout());
+		setCompositeLayoutData();			
+		setBackground(parent.getDefaultBgColor());
 	}
 	
 	private GridLayout getCompositeLayout() {
@@ -271,8 +264,110 @@ public class Map extends Composite {
 		return width;
 	}
 	
-	/////////////////////////////////////////////
+	private void setTerritories() {
+		territoriesMap = new TreeMap<String, Integer[]>();	// name, rgb
+		
+		territoriesMap.put("Aegyptisches Mameluken Sultanat", new Integer[] { 180,133,21 });	// brown
+		territoriesMap.put("Byzantinische Gebiete", new Integer[] { 227,25,77 });				// red
+		territoriesMap.put("Genuesische Gebiete", new Integer[] { 195,54,176 });				// pink/magenta
+		territoriesMap.put("Herzogtum Naxos", new Integer[] { 14,38,178 });					// dark blue
+		territoriesMap.put("Johanniterorden", new Integer[] { 91,245,71 });					// bright green
+		territoriesMap.put("Kamariden Emirat", new Integer[] { 31,120,180 });					// bright blue
+		territoriesMap.put("Königreich Zypern", new Integer[] { 235,131,23 });				// orange
+		territoriesMap.put("Osmanisches Reich", new Integer[] { 238,234,73 });				// yellow
+		territoriesMap.put("Venezianische Gebiete", new Integer[] { 36,112,31 });				// dark green
+	}	
 	
+	// TODO optimize layout?
+	private void setLegend() {
+		Display display = Display.getCurrent();
+		
+		legendShell = new Shell(display, SWT.TITLE | SWT.MIN);
+		legendShell.setLayout(LayoutHelper.getVerticalFillLayout());
+		legendShell.setBackground(parent.getDefaultBgColor());
+		
+		for (String name : territoriesMap.keySet()) {
+			Integer[] c = territoriesMap.get(name);
+			
+			Label label = new Label(legendShell, SWT.NONE);
+			label.setText(name);
+			label.setBackground(new org.eclipse.swt.graphics.Color(display, c[0], c[1], c[2]));
+		}
+		
+		legendShell.setVisible(false);
+		legendShell.pack();
+	}
+	
+	private List<Layer> setShapeLayers(String dirName) {
+		List<Layer> layers = new ArrayList<Layer>();
+		
+		String subPath = dirName.concat(File.separator);
+		boolean visible = false;
+		
+		layers.add(setShapeLayer(
+				subPath.concat("AegyptischesMamelukenSultanat"), 
+				visible));
+		layers.add(setShapeLayer(
+				subPath.concat("Byzantinische Gebiete"),
+				visible));
+		layers.add(setShapeLayer(
+				subPath.concat("Herzogtum Naxos"),
+				visible));
+		layers.add(setShapeLayer(
+				subPath.concat("Johanniterorden"),
+				visible));
+		layers.add(setShapeLayer(
+				subPath.concat("Kamariden Emirat"),
+				visible));
+		layers.add(setShapeLayer(
+				subPath.concat("Königreich Zypern"),
+				visible));
+		layers.add(setShapeLayer(
+				subPath.concat("OsmanischesReich"),
+				visible));
+		layers.add(setShapeLayer(
+				subPath.concat("Venezianische Gebiete"),
+				visible));
+		layers.add(setShapeLayer(
+				subPath.concat("Genuesische Gebiete"),
+				visible));
+		
+		return layers;
+	}
+	
+	protected Shell getLegendShell(String tooltip) {
+		if (legendShell.getText().equals("")) 
+			legendShell.setText(tooltip);
+		
+		return legendShell;
+	}
+	
+	protected void setLayerVisibility(boolean selected, Layer layer) {
+		layer.setVisible(selected);
+	}	
+		
+	protected void setLayerVisibilities(boolean selected, List<Layer> layers, Composite comp) {
+		for (Layer layer : layers) 
+			setLayerVisibility(selected, layer);
+		
+		comp.setVisible(selected);
+	}
+	
+	protected Layer getPlacesLayer() {
+		return placesLayer;
+	}
+	
+	protected Layer getRouteLayer() {
+		return routeLayer;
+	}	
+	
+	protected List<Layer> getTerritoryLayers() {
+		return territoryLayers;
+	}
+	
+	/////////////////////////////////////////////
+		
+//		private GridCoverage2DReader reader;
 		private StyleFactory sf = CommonFactoryFinder.getStyleFactory();
 		private FilterFactory2 ff = CommonFactoryFinder.getFilterFactory2();
 
@@ -291,78 +386,76 @@ public class Map extends Composite {
 	private Style createGreyscaleStyle(/* int band */) {
 		ContrastEnhancement ce = sf.contrastEnhancement(ff.literal(1.0), ContrastMethod.NORMALIZE);
 		SelectedChannelType sct = sf.createSelectedChannelType(String.valueOf(/* band */1), ce);
-
+	
 		RasterSymbolizer sym = sf.getDefaultRasterSymbolizer();
 		ChannelSelection sel = sf.channelSelection(sct);
 		sym.setChannelSelection(sel);
-
+	
 		return SLD.wrapSymbolizers(sym);
 	}
 
-		private GridCoverage2DReader reader;
-
-	/**
-	 * This method examines the names of the sample dimensions in the provided
-	 * coverage looking for "red...", "green..." and "blue..." (case insensitive
-	 * match). If these names are not found it uses bands 1, 2, and 3 for the red,
-	 * green and blue channels. It then sets up a raster symbolizer and returns this
-	 * wrapped in a Style.
-	 *
-	 * @return a new Style object containing a raster symbolizer set up for RGB
-	 *         image
-	 */
-	private Style createRGBStyle() {
-		GridCoverage2D cov = null;
-		try {
-			cov = reader.read(null);
-		} catch (IOException giveUp) {
-			throw new RuntimeException(giveUp);
-		}
-		// We need at least three bands to create an RGB style
-		int numBands = cov.getNumSampleDimensions();
-		if (numBands < 3) {
-			return null;
-		}
-		// Get the names of the bands
-		String[] sampleDimensionNames = new String[numBands];
-		for (int i = 0; i < numBands; i++) {
-			GridSampleDimension dim = cov.getSampleDimension(i);
-			sampleDimensionNames[i] = dim.getDescription().toString();
-		}
-		final int RED = 0, GREEN = 1, BLUE = 2;
-		int[] channelNum = { -1, -1, -1 };
-		// We examine the band names looking for "red...", "green...", "blue...".
-		// Note that the channel numbers we record are indexed from 1, not 0.
-		for (int i = 0; i < numBands; i++) {
-			String name = sampleDimensionNames[i].toLowerCase();
-			if (name != null) {
-				if (name.matches("red.*")) {
-					channelNum[RED] = i + 1;
-				} else if (name.matches("green.*")) {
-					channelNum[GREEN] = i + 1;
-				} else if (name.matches("blue.*")) {
-					channelNum[BLUE] = i + 1;
-				}
-			}
-		}
-		// If we didn't find named bands "red...", "green...", "blue..."
-		// we fall back to using the first three bands in order
-		if (channelNum[RED] < 0 || channelNum[GREEN] < 0 || channelNum[BLUE] < 0) {
-			channelNum[RED] = 1;
-			channelNum[GREEN] = 2;
-			channelNum[BLUE] = 3;
-		}
-		// Now we create a RasterSymbolizer using the selected channels
-		SelectedChannelType[] sct = new SelectedChannelType[cov.getNumSampleDimensions()];
-		ContrastEnhancement ce = sf.contrastEnhancement(ff.literal(1.0), ContrastMethod.NORMALIZE);
-		for (int i = 0; i < 3; i++) {
-			sct[i] = sf.createSelectedChannelType(String.valueOf(channelNum[i]), ce);
-		}
-		RasterSymbolizer sym = sf.getDefaultRasterSymbolizer();
-		ChannelSelection sel = sf.channelSelection(sct[RED], sct[GREEN], sct[BLUE]);
-		sym.setChannelSelection(sel);
-
-		return SLD.wrapSymbolizers(sym);
-	}
-
+//	/**
+//	 * This method examines the names of the sample dimensions in the provided
+//	 * coverage looking for "red...", "green..." and "blue..." (case insensitive
+//	 * match). If these names are not found it uses bands 1, 2, and 3 for the red,
+//	 * green and blue channels. It then sets up a raster symbolizer and returns this
+//	 * wrapped in a Style.
+//	 *
+//	 * @return a new Style object containing a raster symbolizer set up for RGB
+//	 *         image
+//	 */
+//	private Style createRGBStyle() {
+//		GridCoverage2D cov = null;
+//		try {
+//			cov = reader.read(null);
+//		} catch (IOException giveUp) {
+//			throw new RuntimeException(giveUp);
+//		}
+//		// We need at least three bands to create an RGB style
+//		int numBands = cov.getNumSampleDimensions();
+//		if (numBands < 3) {
+//			return null;
+//		}
+//		// Get the names of the bands
+//		String[] sampleDimensionNames = new String[numBands];
+//		for (int i = 0; i < numBands; i++) {
+//			GridSampleDimension dim = cov.getSampleDimension(i);
+//			sampleDimensionNames[i] = dim.getDescription().toString();
+//		}
+//		final int RED = 0, GREEN = 1, BLUE = 2;
+//		int[] channelNum = { -1, -1, -1 };
+//		// We examine the band names looking for "red...", "green...", "blue...".
+//		// Note that the channel numbers we record are indexed from 1, not 0.
+//		for (int i = 0; i < numBands; i++) {
+//			String name = sampleDimensionNames[i].toLowerCase();
+//			if (name != null) {
+//				if (name.matches("red.*")) {
+//					channelNum[RED] = i + 1;
+//				} else if (name.matches("green.*")) {
+//					channelNum[GREEN] = i + 1;
+//				} else if (name.matches("blue.*")) {
+//					channelNum[BLUE] = i + 1;
+//				}
+//			}
+//		}
+//		// If we didn't find named bands "red...", "green...", "blue..."
+//		// we fall back to using the first three bands in order
+//		if (channelNum[RED] < 0 || channelNum[GREEN] < 0 || channelNum[BLUE] < 0) {
+//			channelNum[RED] = 1;
+//			channelNum[GREEN] = 2;
+//			channelNum[BLUE] = 3;
+//		}
+//		// Now we create a RasterSymbolizer using the selected channels
+//		SelectedChannelType[] sct = new SelectedChannelType[cov.getNumSampleDimensions()];
+//		ContrastEnhancement ce = sf.contrastEnhancement(ff.literal(1.0), ContrastMethod.NORMALIZE);
+//		for (int i = 0; i < 3; i++) {
+//			sct[i] = sf.createSelectedChannelType(String.valueOf(channelNum[i]), ce);
+//		}
+//		RasterSymbolizer sym = sf.getDefaultRasterSymbolizer();
+//		ChannelSelection sel = sf.channelSelection(sct[RED], sct[GREEN], sct[BLUE]);
+//		sym.setChannelSelection(sel);
+//
+//		return SLD.wrapSymbolizers(sym);
+//	}
+	
 }

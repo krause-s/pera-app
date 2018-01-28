@@ -23,7 +23,7 @@ public class TextInput extends StyledText {
 		
 		private TextComposite parent = null;
 		
-		private final String defaultText = "...";		// TODO default text?
+		private final String defaultText = "...";
 		private int margin_leftRight = 0;
 		
 		private FocusListener focus = new FocusListener() {
@@ -46,7 +46,6 @@ public class TextInput extends StyledText {
 				private String input;
 			
 			public void keyReleased(KeyEvent e) {
-				// TODO generic RETURN and ENTER
 				if ((e.keyCode == 0xd) || (e.keyCode == 0x1000050)) {		
 					input = getText().trim();
 					
@@ -94,7 +93,7 @@ public class TextInput extends StyledText {
 	
 	private void configText() {
 		setFont(parent.getFont(SWT.BOLD));
-		setTextLimit(80);			// TODO adequate limit?
+		setTextLimit(60);	
 		setText(defaultText);
 		
 		addFocusListener(focus);

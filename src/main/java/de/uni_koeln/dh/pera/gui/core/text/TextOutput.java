@@ -12,8 +12,7 @@ public class TextOutput extends StyledText {
 
 		private Logger logger = LoggerFactory.getLogger(getClass());
 	
-		// TODO if fitting set to final
-		private static int H_HTXTCOMP_PCT = 80;
+		private final static int H_HTXTCOMP_PCT = 80;
 		
 		private TextComposite parent = null;
 		private int margin = 0;

@@ -17,9 +17,8 @@ public class View {
 	
 		private Logger logger = LoggerFactory.getLogger(getClass());
 	
-		// TODO if fitting set to final
-		private static int H_HMONITOR_PCT = 90, 			// "height: 90% of the height of the monitor"
-				W_HEIGHT_PCT = /*75*/80;					// "width: 80% of the height (of the app)"
+		private final static int H_HMONITOR_PCT = 90, 		// "height: 90% of the height of the monitor"
+				W_HEIGHT_PCT = 80;							// "width: 80% of the height (of the app)"
 	
 		private Display display = null;
 		private Shell shell = null;		

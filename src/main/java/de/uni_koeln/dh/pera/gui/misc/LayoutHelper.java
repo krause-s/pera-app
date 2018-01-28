@@ -2,6 +2,7 @@ package de.uni_koeln.dh.pera.gui.misc;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
@@ -45,6 +46,15 @@ public class LayoutHelper {
 		return layout;
 	}
 	
+	public static FillLayout getVerticalFillLayout() {
+		FillLayout layout = new FillLayout(SWT.VERTICAL);
+		layout.marginWidth = 5;
+		layout.marginHeight = 5;
+		
+		logger.info("FillLayout (margin): " + layout.marginWidth);
+		return layout;
+	}
+	
 	public static GridData getGridData(int width) {
 		GridData data = new GridData();
 		data.widthHint = width;
@@ -74,7 +84,15 @@ public class LayoutHelper {
 		return data;
 	}
 	
-	/*private*/public static GridData getAlignment(GridData data, boolean vCenter, boolean hCenter) {
+	public static GridData getCenteredData(int width) {
+		GridData data = getAlignment(
+				getGridData(width), 
+				true, true);
+		
+		return data;
+	}
+	
+	private static GridData getAlignment(GridData data, boolean vCenter, boolean hCenter) {
 		if (vCenter) {
 			data.verticalAlignment = SWT.CENTER;
 			data.grabExcessVerticalSpace = true;

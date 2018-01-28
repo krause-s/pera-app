@@ -1,22 +1,15 @@
 package de.uni_koeln.dh.pera.gui.core.img;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Layout;
-import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.Shell;
-import org.geotools.map.Layer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,70 +20,40 @@ import de.uni_koeln.dh.pera.util.Calc;
 public class ImgComposite extends BaseComposite {
 
 		private Logger logger = LoggerFactory.getLogger(getClass());
-		
 		private Map map = null;
 		
-		// TODO zoom?
-		/*
-		private SelectionListener zoomOutSelection = new SelectionListener() {
+		private SelectionListener placesSelection = new SelectionListener() {
 			public void widgetSelected(SelectionEvent e) {
-				System.out.println("zoomOut");
-			}
-			public void widgetDefaultSelected(SelectionEvent e) {}
-		};
-		
-		private SelectionListener zoomInSelection = new SelectionListener() {
-			public void widgetSelected(SelectionEvent e) {
-				System.out.println("zoomIn");
-			}
-			public void widgetDefaultSelected(SelectionEvent e) {}
-		};
-		*/
-		
-		// TODO city layer
-		private SelectionListener citySelection = new SelectionListener() {
-			public void widgetSelected(SelectionEvent e) {
-				boolean selected = ((Button)e.widget).getSelection();
-				System.out.println("city: " + selected);
-				
-				map.getCityLayer().setVisible(selected);
+				map.setLayerVisibility(
+						getSelection(e), 
+						map.getPlacesLayer());
 			}
 			public void widgetDefaultSelected(SelectionEvent e) {}
 		};
 		
 		private SelectionListener routeSelection = new SelectionListener() {
 			public void widgetSelected(SelectionEvent e) {				
-				boolean selected = ((Button)e.widget).getSelection();
-//				System.out.println("route: " + selected);
-				
-				map.getRouteLayer().setVisible(selected);
+				map.setLayerVisibility(
+						getSelection(e), 
+						map.getRouteLayer());
 			}
 			public void widgetDefaultSelected(SelectionEvent e) {}
 		};
 		
-		private Shell shell;
-		
-		private SelectionListener politSelection = new SelectionListener() {
-			public void widgetSelected(SelectionEvent e) {				
-				boolean selected = ((Button)e.widget).getSelection();
-//				System.out.println("polit.: " + selected);
-				
-				
-
-				
-				shell.setVisible(selected);
-				
-				
-				for (Layer layer : map.getPolitLayers()) 
-					layer.setVisible(selected);
+		private SelectionListener territorySelection = new SelectionListener() {
+			public void widgetSelected(SelectionEvent e) {	
+				map.setLayerVisibilities(
+						getSelection(e), 
+						map.getTerritoryLayers(), 
+						map.getLegendShell(getTooltip(e)));
 			}
 			public void widgetDefaultSelected(SelectionEvent e) {}
 		};
-				
+		
 	public ImgComposite(Composite parent) {
 		super(parent);
 	}
-	
+
 	public void init(int height) {
 		logger.info("Initialize image composite...".toUpperCase());	
 		super.init(height);
@@ -103,30 +66,12 @@ public class ImgComposite extends BaseComposite {
 	public void addMapComponents() {
 		logger.info("Add map components...");
 		
-		
-		
-		
-		
-		
-		shell = new Shell(display, SWT.TITLE | SWT.MIN);
-		shell.setText("Child Shell");
-		shell.setSize(200, 200);
-		shell.setVisible(false);
-		
-		
-		
-		
-		
-		
 		int height = getHeight();
 		int mapHeight = (int) Calc.getValByPct(height, Map.H_HIMGCOMP_PCT);
 		int headHeight = (height - mapHeight) / 2;
 
 		setHeader(headHeight);
-		
-		map = new Map(this);
-		map.init(mapHeight);
-		
+		setMap(mapHeight);		
 		setControls();
 	}
 	
@@ -134,14 +79,19 @@ public class ImgComposite extends BaseComposite {
 		logger.info("Initialize header...");
 		
 		Label header = new Label(this, SWT.CENTER);	
-	
-		// TODO layout
-		header.setLayoutData(/*LayoutHelper.getCenteredData()*/LayoutHelper.getAlignment(LayoutHelper.getGridData(parentWidth), true, true));
+		header.setLayoutData(LayoutHelper.getCenteredData(parentWidth));
 		header.setForeground(getDefaultFgColor());
+//		header.setBackground(display.getSystemColor(SWT.COLOR_CYAN));
 		header.setFont(getHeaderFont(headHeight));
-		header.setText(/*"Einführung"*/"Kapitel VII – Konstantinopel: Ein Besuch beim Kaiser");	// TODO default text
+		// TODO TEXT ADVENTURE: default heading
+		header.setText(/*"Einführung"*/"Kapitel VII – Konstantinopel: Ein Besuch beim Kaiser");
 	}
 
+	private void setMap(int mapHeight) {
+		map = new Map(this);
+		map.init(mapHeight);
+	}
+	
 	private void setControls() {
 		logger.info("Initialize controls...");
 		
@@ -149,53 +99,25 @@ public class ImgComposite extends BaseComposite {
 		ctrlComp.setLayout(getCtrlLayout());
 		ctrlComp.setLayoutData(LayoutHelper.getCenteredData());
 //		ctrlComp.setBackground(display.getSystemColor(SWT.COLOR_MAGENTA));
-				
-		/*
-		Button zoomOutButton = new Button(ctrlComp, SWT.PUSH);
-		zoomOutButton.setText("-");
-		zoomOutButton.setEnabled(false);
-		zoomOutButton.addSelectionListener(zoomOutSelection);
+
+		Button placesButton = new Button(ctrlComp, SWT.TOGGLE);
+		placesButton.setText("\u25bc"); 	// ▼
+		placesButton.setToolTipText("Orte");
+		placesButton.addSelectionListener(placesSelection);
 		
-		Button zoomInButton = new Button(ctrlComp, SWT.PUSH);
-		zoomInButton.setText("+");
-		zoomInButton.setEnabled(false);
-		zoomInButton.addSelectionListener(zoomInSelection);
-		*/
-		
-		// TODO unicode
-		
-		cityButton = new Button(ctrlComp, SWT.TOGGLE);
-		cityButton.setText("\u25bc");
-		cityButton.setToolTipText("Orte");
-		cityButton.addSelectionListener(citySelection);
-		
-		routeButton = new Button(ctrlComp, SWT.TOGGLE);
-		routeButton.setText("⚓︎");
-		routeButton.setSelection(true);
+		Button routeButton = new Button(ctrlComp, SWT.TOGGLE);
+		routeButton.setText("\u2693︎");	// ⚓
+		routeButton.setSelection(true);		// TODO connect with Map.layer
 		routeButton.setToolTipText("Reiseroute");
 		routeButton.addSelectionListener(routeSelection);
 		
-		politButton = new Button(ctrlComp, SWT.TOGGLE);
-		politButton.setText("♕");
-		politButton.setToolTipText("Hoheitsgebiete");
-		politButton.addSelectionListener(politSelection);
+		Button territoryButton = new Button(ctrlComp, SWT.TOGGLE);
+		territoryButton.setText("\u2655"); 	// ♕
+		territoryButton.setToolTipText("Hoheitsgebiete");
+		territoryButton.addSelectionListener(territorySelection);
 	}
-
-		private Button cityButton, 
-			routeButton,
-			politButton;
-		
-//	protected boolean getCitySelection() {
-//		return cityButton.getSelection();
-//	}	
-//	
-//	protected boolean getRouteSelection() {
-//		return routeButton.getSelection();
-//	}
-//	
-//	protected boolean getPolitSelection() {
-//		return politButton.getSelection();
-//	}
+	
+	///////////////////////////
 	
 	private Font getHeaderFont(int headHeight) {
 		Font font = getFont("Palatino Linotype", (headHeight / 3), SWT.BOLD);
@@ -213,6 +135,14 @@ public class ImgComposite extends BaseComposite {
 	
 	public int getInnerWidth() {
 		return map.getWidth();
+	}
+	
+	private boolean getSelection(SelectionEvent e) {
+		return ((Button)e.widget).getSelection();
+	}
+	
+	private String getTooltip(SelectionEvent e) {
+		return ((Button)e.widget).getToolTipText();
 	}
 	
 }

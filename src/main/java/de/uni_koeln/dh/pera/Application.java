@@ -2,7 +2,7 @@ package de.uni_koeln.dh.pera;
 
 import de.uni_koeln.dh.pera.gui.View;
 
-// TODO Javadoc
+// TODO Javadoc, check references (deployment)
 public class Application {
 	
 	public static void main(String[] args) {		
