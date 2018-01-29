@@ -1,15 +1,15 @@
 package de.uni_koeln.dh.pera.gui.core.img;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Layout;
+import org.eclipse.swt.widgets.Listener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,32 +22,29 @@ public class ImgComposite extends BaseComposite {
 		private Logger logger = LoggerFactory.getLogger(getClass());
 		private Map map = null;
 		
-		private SelectionListener placesSelection = new SelectionListener() {
-			public void widgetSelected(SelectionEvent e) {
+		private Listener placesSelection = new Listener() {
+			public void handleEvent(Event e) {
 				map.setLayerVisibility(
 						getSelection(e), 
 						map.getPlacesLayer());
 			}
-			public void widgetDefaultSelected(SelectionEvent e) {}
 		};
 		
-		private SelectionListener routeSelection = new SelectionListener() {
-			public void widgetSelected(SelectionEvent e) {				
+		private Listener routeSelection = new Listener() {
+			public void handleEvent(Event e) {
 				map.setLayerVisibility(
 						getSelection(e), 
 						map.getRouteLayer());
 			}
-			public void widgetDefaultSelected(SelectionEvent e) {}
 		};
 		
-		private SelectionListener territorySelection = new SelectionListener() {
-			public void widgetSelected(SelectionEvent e) {	
+		private Listener territorySelection = new Listener() {
+			public void handleEvent(Event e) {
 				map.setLayerVisibilities(
 						getSelection(e), 
 						map.getTerritoryLayers(), 
 						map.getLegendShell(getTooltip(e)));
 			}
-			public void widgetDefaultSelected(SelectionEvent e) {}
 		};
 		
 	public ImgComposite(Composite parent) {
@@ -103,18 +100,18 @@ public class ImgComposite extends BaseComposite {
 		Button placesButton = new Button(ctrlComp, SWT.TOGGLE);
 		placesButton.setText("\u25bc"); 	// ▼
 		placesButton.setToolTipText("Orte");
-		placesButton.addSelectionListener(placesSelection);
+		placesButton.addListener(SWT.Selection, placesSelection);
 		
 		Button routeButton = new Button(ctrlComp, SWT.TOGGLE);
 		routeButton.setText("\u2693︎");	// ⚓
 		routeButton.setSelection(true);		// TODO connect with Map.layer
 		routeButton.setToolTipText("Reiseroute");
-		routeButton.addSelectionListener(routeSelection);
+		routeButton.addListener(SWT.Selection, routeSelection);
 		
 		Button territoryButton = new Button(ctrlComp, SWT.TOGGLE);
 		territoryButton.setText("\u2655"); 	// ♕
 		territoryButton.setToolTipText("Hoheitsgebiete");
-		territoryButton.addSelectionListener(territorySelection);
+		territoryButton.addListener(SWT.Selection, territorySelection);
 	}
 	
 	///////////////////////////
@@ -137,11 +134,11 @@ public class ImgComposite extends BaseComposite {
 		return map.getWidth();
 	}
 	
-	private boolean getSelection(SelectionEvent e) {
+	private boolean getSelection(Event e) {
 		return ((Button)e.widget).getSelection();
 	}
 	
-	private String getTooltip(SelectionEvent e) {
+	private String getTooltip(Event e) {
 		return ((Button)e.widget).getToolTipText();
 	}
 	

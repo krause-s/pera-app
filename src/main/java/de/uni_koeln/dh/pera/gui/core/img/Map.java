@@ -12,6 +12,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
@@ -46,15 +47,12 @@ import org.slf4j.LoggerFactory;
 import de.uni_koeln.dh.pera.gui.misc.LayoutHelper;
 import de.uni_koeln.dh.pera.util.Calc;
 
+// TODO split
 public class Map extends Composite {
 
 		// TODO check PCT
 		private final static int W_WIMGCOMP_PCT = /*80*/77;
-			
-		// TODO names
-		private Color lineColor = Color.BLACK,
-				fillColor = new Color(202,30,0);		// dark red
-	
+				
 	// TODO
 	private void configMapPane() {
 		logger.info("Add map pane...");
@@ -74,7 +72,7 @@ public class Map extends Composite {
 		
 		// GeoTIFF incl. meta
 //		File rasterFile = new File("src/main/resources/gis/raster/TextadventrueEmpty_geo.tif");
-		File rasterFile = new File("src/test/resources/pera/Textadventrue_neu.tif");
+		File rasterFile = new File("src/main/resources/gis/raster/Textadventrue_neu.tif");
 		
 //									File shpFile = new File("src/test/resources/50m_cultural-edit/ne_50m_admin_0_sovereignty.shp");    		
 //									File shpFile = new File("src/main/resources/gis/shapes/political/AegyptischesMamelukenSultanat.shp");
@@ -131,61 +129,13 @@ public class Map extends Composite {
 			e.printStackTrace();
 		}
 	}
-	
-	// TODO connect visibility with ImgComposite.button
-	private Layer setShapeLayer(String subPath, boolean visible) {
-		Layer layer = null;
-		File file = new File("src/main/resources/gis/shapes", subPath + ".shp");		// TODO file reference (deployment)
 		
-		try {
-			FileDataStore dataStore = FileDataStoreFinder.getDataStore(file);
-			SimpleFeatureSource fileSrc = dataStore.getFeatureSource();
-			
-			Style style = null;
-			
-			if (!subPath.contains(File.separator)) {
-				if (subPath.startsWith("Standorte")) {
-					style = SLD.createPointStyle(
-								"Circle", 
-								lineColor, fillColor, 
-								1.0f/*opacity*/, 
-								7.0f/*size*/, 					// TODO dynamize!
-								"Standort", setFont());
-				} else
-					if (subPath.startsWith("Reiseroute")) {
-						style = SLD.createLineStyle(
-									fillColor, 		
-									1.5f/*size*/);				// TODO dynamize?
-				}
-			} else {			// territories/
-				// TODO optimize workaround?
-				String namePrefix = file.getName().substring(0,8);
-				
-				for (String name : territoriesMap.keySet()) {
-					if (name.startsWith(namePrefix)) {
-						Integer[] c = territoriesMap.get(name);
-						style = SLD.createPolygonStyle(
-									lineColor, new Color(c[0],c[1],c[2]), 
-									0.5f/*opacity*/);
-						
-						break;
-					}
-				}
-			}
-			
-			layer = new FeatureLayer(fileSrc, style);
-			if (!visible) layer.setVisible(false);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+	// TODO font color (white, blue, green..?)
+	private Font getPlacesFont() {
+		int size = width / 38;		// TODO pct calculation
 		
-		return layer;
-	}
-	
-	// TODO name, color
-	private Font setFont() {
 		Font font = sf.getDefaultFont();
-		font.setSize(ff.literal(15));		// TODO dynamize
+		font.setSize(ff.literal(size));	 
 		font.setStyle(ff.literal(Font.Style.ITALIC));
 		font.setWeight(ff.literal(Font.Weight.BOLD));
 
@@ -203,16 +153,15 @@ public class Map extends Composite {
 		setLegend();
 	}
 	
-		
-
 	//////////////////////////////////////////////////////////////////////////////////////////	
 
-
-	
 		private Logger logger = LoggerFactory.getLogger(getClass());
 	
 		protected final static int H_HIMGCOMP_PCT = 75;
-	
+		
+		private static Color BLACK_AWT = Color.BLACK,
+				DARK_RED_AWT = new Color(202,30,0);		
+		
 		private ImgComposite parent = null;
 		private Shell legendShell;		
 		
@@ -226,6 +175,26 @@ public class Map extends Composite {
 		private Layer placesLayer,
 			routeLayer;	
 		private List<Layer> territoryLayers;
+		
+		private Listener labelListener = new Listener() {
+			public void handleEvent(Event e) {
+				String labelText = ((Label)e.widget).getText();
+				
+				for (Layer layer : territoryLayers) {
+					if (!layer.getTitle().equals(labelText)) 
+						layer.setVisible(false);
+					else
+						layer.setVisible(true);
+				}
+			}
+		};
+	
+		// TODO fix delay?
+		private Listener shellListener = new Listener() {
+			public void handleEvent(Event e) {
+				setLayerVisibilities(true, territoryLayers, null);
+			}
+		};
 	
 	protected Map(ImgComposite parent) {
 		super(parent, SWT.NONE);
@@ -291,11 +260,77 @@ public class Map extends Composite {
 			
 			Label label = new Label(legendShell, SWT.NONE);
 			label.setText(name);
+			// TODO alpha?
 			label.setBackground(new org.eclipse.swt.graphics.Color(display, c[0], c[1], c[2]));
+			label.addListener(SWT.MouseEnter, labelListener);
 		}
 		
+		legendShell.addListener(SWT.MouseEnter, shellListener);		
 		legendShell.setVisible(false);
 		legendShell.pack();
+	}
+	
+	// TODO connect visibility with ImgComposite.button
+	private Layer setShapeLayer(String subPath, boolean visible) {
+		Layer layer = null;
+		// TODO file reference (deployment)
+		File file = new File("src/main/resources/gis/shapes", subPath + ".shp");		
+		
+		try {
+			FileDataStore dataStore = FileDataStoreFinder.getDataStore(file);
+			SimpleFeatureSource fileSrc = dataStore.getFeatureSource();
+			
+			Style style = null;
+			String layerName = null;
+
+			if (!subPath.contains(File.separator)) {
+				if (subPath.startsWith("Standorte")) {
+					float size = (float)width / 80;				// TODO pct calculation
+					
+					style = SLD.createPointStyle(
+								"Circle", 
+								BLACK_AWT, DARK_RED_AWT, 
+								1.0f, 
+								size,
+								"Standort", 
+								getPlacesFont());
+				} else
+					if (subPath.startsWith("Reiseroute")) {
+						float size = (float)width / 400;			// TODO pct calculation
+
+						style = SLD.createLineStyle(
+									DARK_RED_AWT, 		
+									size);
+				}
+			} else {			// territories/
+				// TODO optimize workaround?
+				String namePrefix = file.getName().substring(0,8);
+				
+				for (String name : territoriesMap.keySet()) {
+					if (name.startsWith(namePrefix)) {
+						layerName = name;
+						
+						Integer[] c = territoriesMap.get(name);
+						Color color = new Color(c[0],c[1],c[2]);
+						
+						style = SLD.createPolygonStyle(
+									BLACK_AWT, color, 
+									0.5f);
+						
+						break;
+					}
+				}
+			}
+			
+			layer = new FeatureLayer(fileSrc, style);
+			layer.setTitle(layerName);
+			
+			if (!visible) layer.setVisible(false);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		return layer;
 	}
 	
 	private List<Layer> setShapeLayers(String dirName) {
@@ -350,7 +385,8 @@ public class Map extends Composite {
 		for (Layer layer : layers) 
 			setLayerVisibility(selected, layer);
 		
-		comp.setVisible(selected);
+		if (comp != null)
+			comp.setVisible(selected);
 	}
 	
 	protected Layer getPlacesLayer() {
